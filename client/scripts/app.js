@@ -1,16 +1,17 @@
 var app = {
-  server: 'https://api.parse.com/1/classes/chatterbox?order=-createdAt'
+  server: 'https://api.parse.com/1/classes/chatterbox?order=-createdAt',
+  rooms: [],
+  friends: []
 };
 
 app.init = function() {
-  app.fetch = function() {
+  app.fetch = function(query) {
     $.ajax({
-      url: app.server,
+      url: query ? app.server+query : app.server,
       type: 'GET',
       contentType: 'application/json',
       success: function (data) {
-        $('.messages').empty();
-        $('.rooms').empty();
+        app.clearMessages();
         _.each(data.results, function(val, i, collection){
           var time = moment(val.createdAt).format('h:mm:ss')
           var messageDiv = $('<div class="message"></div>')
@@ -22,7 +23,11 @@ app.init = function() {
     });
   };
 
-  // Rooms
+  app.clearMessages = function() {
+    $('.messages').children().remove();
+  };
+
+  // Get rooms
   app.getRooms = function() {
     $.get(app.server, function(data){
       for (var i=0; i<data.results.length; i++) {
@@ -30,35 +35,70 @@ app.init = function() {
           app.rooms.push(data.results[i].roomname);
         }
       }
+      app.displayRooms(app.rooms);
     });
   };
 
-  // _.each(app.rooms, function(value) {
-  //   $('ul.rooms').append('<li>'+value+'</li>');
-  // });
+  // Filter rooms
+  app.filterRooms = function() {
+    var filteredRooms = [];
+    var room = $(this).text();
+    $.get(app.server, function(data){
+      for (var i=0; i<data.results.length; i++) {
+        if (room === data.results[i].roomname) {
+          filteredRooms.push(data.results[i]);
+        }
+      }
+      var query = '&where={"roomname":"'+room+'"}';
+      app.fetch(query);
+      console.log(filteredRooms);
+    });
+  };
 
+  // Display rooms
+  app.displayRooms = function(rooms) {
+    for (var i=0; i<rooms.length; i++) {
+      var roomDiv = $('<div class="room"></div>');
+      var text = rooms[i];
+      roomDiv.text(text);
+      $('.rooms').append(roomDiv);
+    }
 
+    $('.room').on('click', app.filterRooms);
+  };
 
-  setInterval(function() {
-    app.fetch();
-  }, 1000);
+  app.getRooms();
+
+  app.addRoom = function(room) {
+    $('.rooms').append('<div>'+room+'</div>');
+  };
+
+  app.fetch();
+
+  // setInterval(function() {
+  //   app.fetch();
+  // }, 6000);
 
   // Chat button
   app.send = function(chatMessage) {
-
-
     $.ajax({
       url: app.server,
       type: 'POST',
       data: JSON.stringify(chatMessage),
-      success: function(data) {
-        var time = moment(data.createdAt).format('h:mm:ss');
-        var message = $('<div class="message">'
-                          +'['+time+']'+' '
-                          +chatMessage.username+': '+chatMessage.text+'</div>')
-        $('.messages').prepend(chatMessage);
+      success: function() {
+        console.log("success!");
       }
     });
+  };
+
+
+  // Add message
+  app.addMessage = function(message) {
+    var time = moment().format('h:mm:ss');
+    var message = $('<div class="message">'
+                      +'['+time+']'+' '
+                      +message.username+': '+message.text+'</div>')
+    $('.messages').prepend(message);
   };
 
   $('.chatSubmit').on('click', function(e){
@@ -67,9 +107,13 @@ app.init = function() {
       text: $('.chatBox').val(),
       roomname: $('.roomname').val()
     };
+
     app.send(chatMessage);
+    app.addMessage(chatMessage);
+    app.addRoom(chatMessage.roomname);
     return false;
   });
+
 };
 
 

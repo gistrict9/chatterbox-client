@@ -1,57 +1,78 @@
-var roomname = "hr25"
+var app = {
+  server: 'https://api.parse.com/1/classes/chatterbox?order=-createdAt'
+};
 
-$(document).ready(function (){
-
-  var getMessages = function() {
+app.init = function() {
+  app.fetch = function() {
     $.ajax({
-      url: 'https://api.parse.com/1/classes/chatterbox?order=-createdAt',
+      url: app.server,
       type: 'GET',
       contentType: 'application/json',
       success: function (data) {
-        _.each(data.results, function(val, key, collection){
-          // var rooms;
-          // if (rooms.hasOwnProperty(val.roomname)) {
-          //   rooms.val[roomname] += 1;
-          // } else {
-          //   var rooms.val[roomname] = 0;
-          // }
+        $('.messages').empty();
+        $('.rooms').empty();
+        _.each(data.results, function(val, i, collection){
           var time = moment(val.createdAt).format('h:mm:ss')
           var messageDiv = $('<div class="message"></div>')
-          var something = '['+time+']'+' '+val.username+': '+val.text;
-          messageDiv.text(something);
+          var text = '['+time+']'+' '+val.username+': '+val.text;
+          messageDiv.text(text);
           $('.messages').append(messageDiv);
         });
       }
     });
   };
 
-  getMessages();
+  // Rooms
+  app.getRooms = function() {
+    $.get(app.server, function(data){
+      for (var i=0; i<data.results.length; i++) {
+        if (app.rooms.indexOf(data.results[i].roomname) === -1) {
+          app.rooms.push(data.results[i].roomname);
+        }
+      }
+    });
+  };
+
+  // _.each(app.rooms, function(value) {
+  //   $('ul.rooms').append('<li>'+value+'</li>');
+  // });
 
 
-  // setInterval(function() {
-  //   getMessages();
-  // }, 1000);
+
+  setInterval(function() {
+    app.fetch();
+  }, 1000);
 
   // Chat button
-  $('.chatSubmit').on('click', function(e){
-    var mess = {text: undefined};
-    mess.text = $('.chatBox').val();
-    //var time = moment().format('h:mm:ss');
-    mess.username = $('.username').val();
-    mess.roomname = roomname;
-    e.preventDefault();
+  app.send = function(chatMessage) {
+
+
     $.ajax({
-      url: 'https://api.parse.com/1/classes/chatterbox',
+      url: app.server,
       type: 'POST',
-      data: JSON.stringify(mess),
+      data: JSON.stringify(chatMessage),
       success: function(data) {
         var time = moment(data.createdAt).format('h:mm:ss');
         var message = $('<div class="message">'
                           +'['+time+']'+' '
-                          +mess.username+': '+mess.text+'</div>')
-        $('.messages').prepend(message);
+                          +chatMessage.username+': '+chatMessage.text+'</div>')
+        $('.messages').prepend(chatMessage);
       }
     });
-  });
+  };
 
+  $('.chatSubmit').on('click', function(e){
+    var chatMessage = {
+      username: $('.username').val(),
+      text: $('.chatBox').val(),
+      roomname: $('.roomname').val()
+    };
+    app.send(chatMessage);
+    return false;
+  });
+};
+
+
+$(document).ready(function (){
+  app.init();
 });

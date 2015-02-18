@@ -5,8 +5,32 @@ body {
     font-family: arial, sans-serif;
 }
 
+.users {
+    display: inline-block;
+    margin: 20px;
+    position: absolute;
+    top: 50px;
+    left: 100px;
+}
+
+.rooms {
+    display: inline-block;
+    margin: 20px;
+    position: absolute;
+    top: 500px;
+    left: 100px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.message {
+    margin: 5px 0 5px 0;
+}
+
 #main {
-    width: 500px;
+    width: 800px;
     margin: auto;
     text-align: left;
     background: white;
@@ -52,25 +76,11 @@ form {
     margin-bottom: 20px;
 }
 
-form input[type=text] {
+form input[type=text], textarea {
     margin-right: 10px;
     width: 70%;
     font-size: 12px;
     padding: 5px;
-}
-
-.chat {
-    padding: 5px;
-    margin-bottom: 5px;
-    background-color: #eee;
-}
-
-.chat .username {
-    font-weight: 800;
-}
-
-.chat:hover {
-    background-color: #ddd;
 }
 
 .spinner {

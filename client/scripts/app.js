@@ -1,7 +1,7 @@
 var app = {
   server: 'https://api.parse.com/1/classes/chatterbox?order=-createdAt',
   rooms: [],
-  friends: []
+  users: []
 };
 
 app.init = function() {
@@ -16,7 +16,7 @@ app.init = function() {
           var time = moment(val.createdAt).format('h:mm:ss')
           var messageDiv = $('<div class="message"></div>')
           var text = '['+time+']'+' '+val.username+': '+val.text;
-          messageDiv.text(text);
+          messageDiv.text(text).addClass(val.username);
           $('.messages').append(messageDiv);
         });
       }
@@ -38,6 +38,35 @@ app.init = function() {
       app.displayRooms(app.rooms);
     });
   };
+
+  // Get users
+  app.getUsers = function() {
+    $.get(app.server, function(data){
+      for (var i=0; i<data.results.length; i++) {
+        if (app.users.indexOf(data.results[i].username) === -1) {
+          app.users.push(data.results[i].username);
+        }
+      }
+      app.displayUsers(app.users);
+    });
+  };
+
+  app.displayUsers = function(users) {
+    for (var i=0; i<users.length; i++) {
+      var userDiv = $('<div class="user"></div>');
+      var text = users[i];
+      userDiv.text(text);
+      $('.users').append(userDiv);
+    }
+
+    $('.user').on('click', function() {
+      var username = $(this).text();
+      $(this).toggleClass('bold');
+      $('.'+username).toggleClass('bold');
+    });
+  };
+
+  app.getUsers();
 
   // Filter rooms
   app.filterRooms = function() {
